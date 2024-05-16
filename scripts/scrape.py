@@ -1,13 +1,14 @@
 #!/usr/bin/python
-import logging
 import json
+import logging
 import os
-import requests
 import time
 import traceback
-
 from datetime import datetime, timedelta
 
+import requests
+
+# Setup logging configuration
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
@@ -17,7 +18,8 @@ logging.basicConfig(
     ]
 )
 
-headers = {
+# Define constants
+HEADERS = {
     'Accept': 'application/json, text/plain, */*',
     'Accept-Language': 'en-US,en;q=0.5',
     'Content-Type': 'application/json',
@@ -26,183 +28,163 @@ headers = {
     'Origin': 'https://bmtcwebportal.amnex.com',
     'Referer': 'https://bmtcwebportal.amnex.com/'
 }
+BASE_URL = 'https://bmtcmobileapistaging.amnex.com/WebAPI/'
 
 
-def getRoutes():
-
-    response = requests.post('https://bmtcmobileapistaging.amnex.com/WebAPI/GetAllRouteList', headers=headers)
-
-    with open("routes.json", "w") as f:
+# Function to fetch all routes
+def get_routes():
+    routes = []
+    response = requests.post(f'{BASE_URL}GetAllRouteList', headers=HEADERS)
+    with open("../data/raw/routes.json", "w") as f:
         f.write(response.text)
+        routes = json.load(f)
+    return routes
 
-    return response
 
+# Function to fetch route IDs and save them if necessary
+def get_route_ids(routes):
+    route_parents = {}
 
-def getRoutelines(routes):
+    logging.info("Fetching route IDs...")
 
-    logging.info("Fetching routelines...")
+    directory_path = "../data/raw/routeids"
+    os.makedirs(directory_path, exist_ok=True)
+    dir_list = set(os.listdir(directory_path))
+    pending_routes = [route for route in routes['data'] if
+                      (route['routeno'].replace(" UP", "").replace(" DOWN", "") + '.json') not in dir_list]
 
-    directory_path = "routelines"
-    dir_list = os.listdir(directory_path)
+    routes_prefix = sorted(set(route['routeno'][:3] for route in pending_routes))
 
-    for route in routes['data']:
-        if (route['routeno'] + '.json') in dir_list:
+    for route_prefix in routes_prefix:
+        if f'{route_prefix}.json' in dir_list:
             continue
 
         time.sleep(0.5)
+        logging.debug(f"Fetching {route_prefix}.json")
 
-        route_id = route['routeid']
-        route_no = route['routeno'].strip()
-        logging.debug("Fetching {}.json".format(route_no))
+        data = json.dumps({"routetext": route_prefix})
+        response = requests.post(f'{BASE_URL}SearchRoute_v2', headers=HEADERS, data=data)
 
-        data = f'{{"routeid":{route_id}}}'
-
-        response = requests.post('https://bmtcmobileapistaging.amnex.com/WebAPI/RoutePoints', headers=headers, data=data)
-
-        with open(f'{directory_path}/{route_no}.json', 'w') as f:
-            f.write(response.text)
-
-        logging.info("Fetched {}.json".format(route_no))
-
-    dir_list = os.listdir(directory_path)
-    logging.info("Finished fetching routelines... ({} routelines)".format(len(dir_list)))
-
-
-def getTimetables(routes):
-
-    logging.info("Fetching timetables...")
-
-    for day in range(1, 8):
-        date = datetime.now() + timedelta(days=day)
-        dow = date.strftime("%A")
-        os.makedirs(f'timetables/{dow}', exist_ok=True)
-
-        directory_path = f'timetables/{dow}'
-        dir_list = os.listdir(directory_path)
-
-        for route in routes['data']:
-            if (route['routeno'] + '.json') in dir_list:
-                continue
-
-            time.sleep(0.5)
-
-            route_id = route['routeid']
-            route_no = route['routeno'].strip()
-            fromstation_id = route['fromstationid']
-            tostation_id = route['tostationid']
-            logging.debug("Fetching {}.json".format(route_no))
-
-            data = f'{{"routeid":{route_id},"fromStationId":{fromstation_id},"toStationId":{tostation_id},"current_date":"{date.strftime("%Y-%m-%d")}"}}'
-
-            response = requests.post('https://bmtcmobileapistaging.amnex.com/WebAPI/GetTimetableByRouteid_v2', headers=headers, data=data)
-
-            with open(f'timetables/{dow}/{route_no}.json', 'w') as f:
-                f.write(response.text)
-
-            logging.info("Fetched {}.json".format(route_no))
-
-    dir_list = os.listdir(directory_path)
-    logging.info("Finished fetching timetables... ({} timetables)".format(len(dir_list)))
-
-
-def getRouteids(routes):
-
-    routeParents = {}
-
-    logging.info("Fetching routeids...")
-
-    directory_path = "routeids"
-    dir_list = os.listdir(directory_path)
-    pendingRoutes = []
-
-    for route in routes['data']:
-        if (route['routeno'].replace(" UP", "").replace(" DOWN", "") + '.json') not in dir_list:
-            pendingRoutes.append(route)
-    
-    routes_no = ([route.get('routeno') for route in pendingRoutes])
-    routes_prefix = sorted(set([route[:3] for route in routes_no]))
-
-    for route in routes_prefix:
-        if (route + '.json') in dir_list:
-            continue
-
-        time.sleep(0.5)
-
-        logging.debug("Fetching {}.json".format(route))
-
-        data = f'{{"routetext":"{route}"}}'
-
-        response = requests.post('https://bmtcmobileapistaging.amnex.com/WebAPI/SearchRoute_v2', headers=headers, data=data)
-
-        with open(f'{directory_path}/{route}.json', 'w') as f:
+        with open(f'{directory_path}/{route_prefix}.json', 'w') as f:
             f.write(response.text)
 
     for filename in dir_list:
         with open(os.path.join(directory_path, filename), 'r', encoding='utf-8') as file:
             data = json.load(file)
-
             for route in data['data']:
-                routeParents[route['routeno']] = route['routeparentid']
+                route_parents[route['routeno']] = route['routeparentid']
 
-    logging.info("Finished fetching routeids!")
+    logging.info("Finished fetching route IDs!")
+    return route_parents
 
-    return routeParents
 
+# Function to fetch route lines and save them
+def get_route_lines(routes):
+    logging.info("Fetching route lines...")
 
-def getStoplists(routes, routeParents):
-
-    logging.info("Fetching stoplists...")
-
-    directory_path = "stops"
-    dir_list = os.listdir(directory_path)
-    pendingRoutes = []
+    directory_path = "../data/raw/routelines"
+    os.makedirs(directory_path, exist_ok=True)
+    dir_list = set(os.listdir(directory_path))
 
     for route in routes['data']:
-        if (route['routeno'] + '.json') not in dir_list:
-            pendingRoutes.append(route['routeno'])
-    pendingRoutes.reverse()
+        filename = f"{route['routeno']}.json"
+        if filename in dir_list:
+            continue
+
+        time.sleep(0.5)
+        logging.debug(f"Fetching {filename}")
+
+        data = json.dumps({"routeid": route['routeid']})
+        response = requests.post(f'{BASE_URL}RoutePoints', headers=HEADERS, data=data)
+
+        with open(f'{directory_path}/{filename}', 'w') as f:
+            f.write(response.text)
+        logging.info(f"Fetched {filename}")
+
+    logging.info(f"Finished fetching route lines... ({len(dir_list)} route lines)")
+
+
+# Function to fetch timetables and save them
+def get_timetables(routes):
+    logging.info("Fetching timetables...")
+
+    for day in range(1, 8):
+        date = datetime.now() + timedelta(days=day)
+        dow = date.strftime("%A")
+        directory_path = f'../data/raw/timetables/{dow}'
+        os.makedirs(directory_path, exist_ok=True)
+        dir_list = set(os.listdir(directory_path))
+
+        for route in routes['data']:
+            filename = f"{route['routeno']}.json"
+            if filename in dir_list:
+                continue
+
+            time.sleep(0.5)
+            logging.debug(f"Fetching {filename}")
+
+            data = json.dumps({
+                "routeid": route['routeid'],
+                "fromStationId": route['fromstationid'],
+                "toStationId": route['tostationid'],
+                "current_date": date.strftime("%Y-%m-%d")
+            })
+            response = requests.post(f'{BASE_URL}GetTimetableByRouteid_v2', headers=HEADERS, data=data)
+
+            with open(f'{directory_path}/{filename}', 'w') as f:
+                f.write(response.text)
+            logging.info(f"Fetched {filename}")
+
+        logging.info(f"Finished fetching timetables for {dow}... ({len(dir_list)} timetables)")
+
+
+# Function to fetch stop lists and save them
+def get_stop_lists(routes, route_parents):
+    logging.info("Fetching stop lists...")
+
+    directory_path = "../data/raw/stops"
+    os.makedirs(directory_path, exist_ok=True)
+    dir_list = set(os.listdir(directory_path))
+    pending_routes = [route['routeno'] for route in routes['data'] if (route['routeno'] + '.json') not in dir_list]
+    pending_routes.reverse()
 
     for attempt in range(1, 100):
-        for route in pendingRoutes:
+        for route in pending_routes:
+            routeparentname = route.replace(" UP", "").replace(" DOWN", "")
             try:
-                if (route + '.json') in dir_list:
+                if f'{route}.json' in dir_list:
                     continue
 
                 time.sleep(0.5)
+                logging.debug(f"Fetching {routeparentname}.json with route ID {route_parents[routeparentname]}")
 
-                routeparentname = route.replace(" UP", "").replace(" DOWN", "")
-                logging.debug("Fetching {}.json with routeid {}".format(routeparentname, routeParents[routeparentname]))
+                data = json.dumps({"routeid": route_parents[routeparentname], "servicetypeid": 0})
+                response = requests.post(f'{BASE_URL}SearchByRouteDetails_v4', headers=HEADERS, data=data)
+                response_data = response.json()
 
-                data = f'{{"routeid":{routeParents[routeparentname]},"servicetypeid":0}}'
-
-                response = requests.post('https://bmtcmobileapistaging.amnex.com/WebAPI/SearchByRouteDetails_v4', headers=headers, data=data)
-
-                if response.json()["message"] == "Data not found":
+                if response_data.get("message") == "Data not found":
                     continue
 
-                if len(response.json()["up"]["data"]) > 0:
+                if response_data.get("up", {}).get("data"):
                     with open(f'{directory_path}/{routeparentname} UP.json', 'w') as f:
                         f.write(response.text)
-                if len(response.json()["down"]["data"]) > 0:
+                if response_data.get("down", {}).get("data"):
                     with open(f'{directory_path}/{routeparentname} DOWN.json', 'w') as f:
                         f.write(response.text)
 
-                pendingRoutes.remove(route)
-                logging.info("Fetched {}.json with routeid {}".format(routeparentname, routeParents[routeparentname]))
-            except Exception as err:
-                logging.error("Failed {}.json".format(routeparentname))
+                pending_routes.remove(route)
+                logging.info(f"Fetched {routeparentname}.json with route ID {route_parents[routeparentname]}")
+            except Exception:
+                logging.error(f"Failed {routeparentname}.json")
                 logging.error(traceback.format_exc())
 
-    dir_list = os.listdir(directory_path)
-    logging.info("Finished fetching stoplists ({} routes)".format(len(dir_list)))
+    logging.info(f"Finished fetching stop lists ({len(dir_list)} routes)")
 
 
-routes = getRoutes()
-f = open("routes.json")
-
-routes = json.load(f)
-routeParents = getRouteids(routes)
-
-getRoutelines(routes)
-getTimetables(routes)
-getStoplists(routes, routeParents)
+# Main workflow
+if __name__ == "__main__":
+    routes = get_routes()
+    route_parents = get_route_ids(routes)
+    get_route_lines(routes)
+    get_timetables(routes)
+    get_stop_lists(routes, route_parents)

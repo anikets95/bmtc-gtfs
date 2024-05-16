@@ -15,7 +15,7 @@ Due to the design of the Namma BMTC app, only routes with functional live tracki
 
 ## GTFS
 
-The GTFS dataset can be found **[here](gtfs/bmtc.zip?raw=1)**
+The GTFS dataset can be found **[here](data/gtfs/bmtc.zip?raw=1)**
 
 ## Maps
 
@@ -42,18 +42,18 @@ The GTFS dataset can be found **[here](gtfs/bmtc.zip?raw=1)**
 ## GeoJSON
 
 GeoJSONs can be found below:
-- [Routes](geojson/routes.geojson?raw=1)
-- [Stops](geojson/stops.geojson?raw=1)
-- [Aggregated Stops](geojson/aggregated.geojson?raw=1)
+- [Routes](data/geojson/routes.geojson?raw=1)
+- [Stops](data/geojson/stops.geojson?raw=1)
+- [Aggregated Stops](data/geojson/aggregated.geojson?raw=1)
 
 Conversion into other formats can be done using free tools like [mapshaper](https://mapshaper.org/) or [QGIS](https://qgis.org/en/site/)
 
 ## CSV
 
 CSVs can be found below:
-- [Routes](csv/routes.csv?raw=1) (or explore [here](https://flatgithub.com/Vonter/bmtc-gtfs?filename=csv/routes.csv&stickyColumnName=name&sort=trip_count%2Cdesc))
-- [Stops](csv/stops.csv?raw=1) (or explore [here](https://flatgithub.com/Vonter/bmtc-gtfs?filename=csv/stops.csv&stickyColumnName=name&sort=trip_count%2Cdesc))
-- [Aggregated Stops](csv/aggregated.csv?raw=1) (or explore [here](https://flatgithub.com/Vonter/bmtc-gtfs?filename=csv/aggregated.csv&stickyColumnName=name&sort=trip_count%2Cdesc))
+- [Routes](data/csv/routes.csv?raw=1) (or explore [here](https://flatgithub.com/Vonter/bmtc-gtfs?filename=csv/routes.csv&stickyColumnName=name&sort=trip_count%2Cdesc))
+- [Stops](data/csv/stops.csv?raw=1) (or explore [here](https://flatgithub.com/Vonter/bmtc-gtfs?filename=csv/stops.csv&stickyColumnName=name&sort=trip_count%2Cdesc))
+- [Aggregated Stops](data/csv/aggregated.csv?raw=1) (or explore [here](https://flatgithub.com/Vonter/bmtc-gtfs?filename=csv/aggregated.csv&stickyColumnName=name&sort=trip_count%2Cdesc))
 
 ## HTML
 
@@ -70,15 +70,15 @@ Visualize the routes, stops and timetables in the GTFS dataset, with a web brows
 - [scrape.py](scripts/scrape.py): Scrape raw data from Namma BMTC
 - [gtfs.py](scripts/gtfs.py): Parse raw data and save as GTFS
 - [valiate.py](scripts/validate.py): Pass the GTFS through multiple GTFS validation tools
-- [geojson.py](scripts/geojson.py): Process the GTFS and output a GeoJSON representing the network
+- [geojson.py](scripts/geojson_creator.py): Process the GTFS and output a GeoJSON representing the network
 
 ## Raw JSON
 
 Raw JSON data scraped from Namma BMTC can be found below:
 
-- [routelines.zip](raw/routelines.zip?raw=1): Pointwise co-ordinates of each route
-- [stops.zip](raw/stops.zip?raw=1): Stops through which each route passes
-- [timetables.zip](raw/timetables.zip?raw=1): Timetables for each route
+- [routelines.zip](data/raw/routelines.zip?raw=1): Pointwise co-ordinates of each route
+- [stops.zip](data/raw/stops.zip?raw=1): Stops through which each route passes
+- [timetables.zip](data/raw/timetables.zip?raw=1): Timetables for each route
 
 ## To-do
 
