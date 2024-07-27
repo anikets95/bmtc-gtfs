@@ -1,0 +1,51 @@
+services:
+
+  gtfstidy:
+    image: anikets95/gtfstidy
+    volumes:
+      - ./bmtc-data:/work
+    command: gtfstidy -SCRmcdsOeD /work/gtfs/intermediate/bmtc.zip -o /work/gtfs/bmtc.zip
+
+  gtfs-validator:
+    image: ghcr.io/mobilitydata/gtfs-validator:latest
+    volumes:
+      - ./bmtc-data:/work
+    command: -i /work/gtfs/bmtc.zip -o /work/validation/gtfs-validator
+    depends_on:
+      gtfstidy :
+          condition: service_completed_successfully
+
+  gtfsvtor:
+    image: laurentgregoire/gtfsvtor
+    volumes:
+      - ./bmtc-data:/work
+    environment:
+      - TZ=Asia/Kolkaata
+    command: /work/gtfs/bmtc.zip -o /work/validation/gtfsvtor/validation-results.html
+    depends_on:
+      gtfstidy:
+          condition: service_completed_successfully
+
+  transport-validator:
+    image: anikets95/transport-validator
+    volumes:
+      - ./bmtc-data:/work
+    command: bash -c "./run.sh"
+    depends_on:
+      gtfstidy:
+          condition: service_completed_successfully
+
+  gtfs-to-html:
+    image: anikets95/gtfs-to-html
+    volumes:
+      - ./bmtc-data/html:/html
+    command: gtfs-to-html -c /html/config.json
+    depends_on:
+      transport-validator:
+          condition: service_completed_successfully
+      gtfsvtor:
+          condition: service_completed_successfully
+      gtfs-validator:
+          condition: service_completed_successfully
+
+

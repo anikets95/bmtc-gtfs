@@ -1,6 +1,6 @@
 # bmtc-gtfs
 
-Unofficial GTFS dataset for BMTC routes, stops and timetables in Bengaluru. Raw data sourced from Namma BMTC app, parsed and saved as GTFS.
+Unofficial GTFS dataset for BMTC routes, stops and timetables in Bengaluru. Raw data sourced from Namma BMTC app, parsed and saved as GTFS. This is a fork of Vonter's [repo](https://github.com/Vonter/bmtc-gtfs)
 
 ## Motivation
 
@@ -15,81 +15,72 @@ Due to the design of the Namma BMTC app, only routes with functional live tracki
 
 ## GTFS
 
-The GTFS dataset can be found **[here](gtfs/bmtc.zip?raw=1)**
+The GTFS dataset can be found **[here](bmtc-data/gtfs/bmtc.zip?raw=1)**
 
 ## Maps
 
 ### Route frequency
 
-![](analysis/route-frequency.png)
-*Route frequency - number of daily trips passing through a given route. [View interactive map](https://felt.com/map/BMTC-Routes-January-2024-tmH9CPE9AsQmaAIqpwyh9AkdC?loc=13.00,77.50,11z)*
-
 ### Stop frequency
-
-![](analysis/stop-frequency.png)
-*Stop frequency - number of daily trips passing through a given stop. [View interactive map](https://felt.com/map/BMTC-Stops-January-2024-r1xBsx0DSxu67ij4v36cSC?loc=13.00,77.50,11z)*
 
 ### Most frequent route
 
-![](analysis/route-top.png)
-*Most frequent routes - MF-375D (434 trips), MF-378 (393 trips), MF-410FA (319 trips), 290-E (306 trips), KBS-3A (293 trips). [View interactive map](https://felt.com/map/Most-Frequent-BMTC-Routes-xc2XS9BtXRFCpqEQBS3REjC?loc=12.9417,77.5444,10.98z)*
-
 ### Most frequent stop
-
-![](analysis/stop-top.png)
-*Most frequent stops - KBS (12520 trips), Corporation (7376 trips), Town Hall (4631 trips), Indian Express (4268 trips), Maharani College (4187 trips). [View interactive map](https://felt.com/map/Most-Frequent-BMTC-Stops-x3iatTZpSKGCdZGG9ClzZMB?loc=12.96784,77.57994,12.68z)*
 
 ## GeoJSON
 
 GeoJSONs can be found below:
-- [Routes](geojson/routes.geojson?raw=1)
-- [Stops](geojson/stops.geojson?raw=1)
-- [Aggregated Stops](geojson/aggregated.geojson?raw=1)
+- [Routes](bmtc-data/geojson/routes.geojson?raw=1)
+- [Stops](bmtc-data/geojson/stops.geojson?raw=1)
+- [Aggregated Stops](bmtc-data/geojson/aggregated.geojson?raw=1)
 
 Conversion into other formats can be done using free tools like [mapshaper](https://mapshaper.org/) or [QGIS](https://qgis.org/en/site/)
 
 ## CSV
 
 CSVs can be found below:
-- [Routes](csv/routes.csv?raw=1) (or explore [here](https://flatgithub.com/Vonter/bmtc-gtfs?filename=csv/routes.csv&stickyColumnName=name&sort=trip_count%2Cdesc))
-- [Stops](csv/stops.csv?raw=1) (or explore [here](https://flatgithub.com/Vonter/bmtc-gtfs?filename=csv/stops.csv&stickyColumnName=name&sort=trip_count%2Cdesc))
-- [Aggregated Stops](csv/aggregated.csv?raw=1) (or explore [here](https://flatgithub.com/Vonter/bmtc-gtfs?filename=csv/aggregated.csv&stickyColumnName=name&sort=trip_count%2Cdesc))
+- [Routes](bmtc-data/csv/routes.csv?raw=1)
+- [Stops](bmtc-data/csv/stops.csv?raw=1) 
+- [Aggregated Stops](bmtc-data/csv/aggregated.csv?raw=1) 
 
 ## HTML
 
-Visualize the routes, stops and timetables in the GTFS dataset, with a web browser: **[https://bmtc-gtfs.netlify.app](https://bmtc-gtfs.netlify.app)**
+Visualize the routes, stops and timetables in the GTFS dataset, with a web browser: #TBD
 
 ## Validations
 
-- [gtfs-validator](validation/gtfs-validator)
-- [gtfsvtor](validation/gtfsvtor)
-- [transport-validator](validation/transport-validator)
+- [gtfs-validator](bmtc-data/validation/gtfs-validator)
+- [gtfsvtor](bmtc-data/validation/gtfsvtor)
+- [transport-validator](bmtc-data/validation/transport-validator)
 
 ## Scripts
 
 - [scrape.py](scripts/scrape.py): Scrape raw data from Namma BMTC
 - [gtfs.py](scripts/gtfs.py): Parse raw data and save as GTFS
-- [valiate.py](scripts/validate.py): Pass the GTFS through multiple GTFS validation tools
-- [geojson.py](scripts/geojson.py): Process the GTFS and output a GeoJSON representing the network
+- [geojson_creator.py](scripts/geojson_creator.py): Process the GTFS and output a GeoJSON representing the network
+- [csv_creator.py](scripts/csv_creator.py): Process the GeoJSON and output a CSV
+- [orchestrator.py](scripts/orchestrator_creator.py): Orchestrate Complete Process
+- [docker-compose.yml](docker-compose.yml): Handles Linting, Validation and HTML conversion of GTFS data
+
 
 ## Raw JSON
 
 Raw JSON data scraped from Namma BMTC can be found below:
 
-- [routelines.zip](raw/routelines.zip?raw=1): Pointwise co-ordinates of each route
-- [stops.zip](raw/stops.zip?raw=1): Stops through which each route passes
-- [timetables.zip](raw/timetables.zip?raw=1): Timetables for each route
+- [routelines.zip](bmtc-data/raw/routelines.zip?raw=1): Pointwise co-ordinates of each route
+- [stops.zip](bmtc-data/raw/stops.zip?raw=1): Stops through which each route passes
+- [timetables.zip](bmtc-data/raw/timetables.zip?raw=1): Timetables for each route
 
 ## To-do
 
 - Refactor/optimize scripts
     - Fix validation errors and warnings
+    - https://gtfstohtml.com/docs/configuration
     - Fix missing/failed routes/stops/timetables
     - Minimize network calls
     - Speed up data processing
     - GitHub Actions workflow
     - Daily update of route/stop/timetable changes
-- PDF timetables
 - Add maps (and data analysis)
     - [Route series-wise maps](https://github.com/geohacker/bmtc#2-and-3-series-routes)
     - [Directionality](https://github.com/geohacker/bmtc#direction)
@@ -119,3 +110,4 @@ Interested in contributing or want to know more? Join the [bengwalk Discord Serv
 - [nikhilvj](http://nikhilvj.co.in/files/bmtc-gtfs/)
 - [openbangalore](https://dataspace.mobi/dataset/bengaluru-public-transport-gtfs-static)
 - [mauryam](https://github.com/mauryam/gtfs-data)
+- [vonter](https://github.com/Vonter/bmtc-gtfs)

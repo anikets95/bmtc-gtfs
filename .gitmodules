@@ -1,0 +1,3 @@
+[submodule "bmtc-data"]
+	path = bmtc-data
+	url = https://github.com/anikets95/bmtc-data.git
