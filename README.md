@@ -45,7 +45,7 @@ CSVs can be found below:
 
 ## HTML
 
-Visualize the routes, stops and timetables in the GTFS dataset, with a web browser: #TBD
+Visualize the routes, stops and timetables in the GTFS dataset, with a web browser: [Website](https://anikets95.github.io/bmtc-data/html/bmtc/index.html)
 
 ## Validations
 
