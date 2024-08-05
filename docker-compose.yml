@@ -35,17 +35,26 @@ services:
       gtfstidy:
           condition: service_completed_successfully
 
-#  gtfs-to-html:
-#    image: anikets95/gtfs-to-html
-#    volumes:
-#      - ./bmtc-data/html:/html
-#    command: gtfs-to-html -c /html/config.json
+  gtfs-to-html:
+    image: anikets95/gtfs-to-html
+    volumes:
+      - ./bmtc-data/html:/html
+    command: gtfs-to-html -c /html/config.json
 #    depends_on:
 #      transport-validator:
 #          condition: service_completed_successfully
 #      gtfsvtor:
 #          condition: service_completed_successfully
 #      gtfs-validator:
+#          condition: service_completed_successfully
+
+  html-minifier:
+    image: anikets95/html-minifier
+    volumes:
+      - ./bmtc-data/html:/html
+    command: html-minifier --input-dir /html --output-dir /html --remove-comments --collapse-whitespace --minify-css --minify-js
+#    depends_on:
+#      gtfs-to-html:
 #          condition: service_completed_successfully
 
 
