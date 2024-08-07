@@ -38,15 +38,16 @@ services:
   gtfs-to-html:
     image: anikets95/gtfs-to-html
     volumes:
+      - ./bmtc-data:/work
       - ./bmtc-data/html:/html
     command: gtfs-to-html -c /html/config.json
-#    depends_on:
-#      transport-validator:
-#          condition: service_completed_successfully
-#      gtfsvtor:
-#          condition: service_completed_successfully
-#      gtfs-validator:
-#          condition: service_completed_successfully
+    depends_on:
+      transport-validator:
+          condition: service_completed_successfully
+      gtfsvtor:
+          condition: service_completed_successfully
+      gtfs-validator:
+          condition: service_completed_successfully
 
   html-minifier:
     image: anikets95/html-minifier
