@@ -46,7 +46,7 @@ def get_routes():
     if response.status_code != 200:
         logging.error(f'Failed to get route list: {response.text}')
         return None
-    with open("bmtc-data/raw/routes.json", "w") as f:
+    with open("bmtc-data/raw/routes.json", "w", encoding='utf-8') as f:
         f.write(response.text)
     return response.json()
 
@@ -72,7 +72,7 @@ def get_route_ids():
                 or not response.json().get('Issuccess')):
             logging.error(f"No route records found in API call starting with {possible_search}")
         else:
-            with open(f'{directory_path}/{possible_search}.json', 'w') as f:
+            with open(f'{directory_path}/{possible_search}.json', 'w', encoding='utf-8') as f:
                 f.write(response.text)
 
     dir_list = set(os.listdir(directory_path))
@@ -81,7 +81,7 @@ def get_route_ids():
         with open(os.path.join(directory_path, filename), 'r', encoding='utf-8') as file:
             data = json.load(file)
             for route in data['data']:
-                if route['routeno'] not in route_parents:
+                if route['routeno'].replace('\t', '') not in route_parents:
                     route_parents[route['routeno']] = route['routeparentid']
 
     logging.info("Finished fetching route IDs!")
@@ -92,7 +92,8 @@ def get_route_ids():
 # Function to fetch a single route line
 def fetch_route_line(route):
     directory_path = "bmtc-data/raw/routelines"
-    filename = f"{route['routeno']}.json"
+    routeno = route['routeno'].replace('\t', '')
+    filename = f"{routeno}.json"
 
     logging.debug(f"Fetching route line : {filename}")
 
@@ -102,7 +103,7 @@ def fetch_route_line(route):
     if response.json().get('Message') == "No Records Found" or not response.json().get('Issuccess'):
         logging.error(f"No route line record found in API call for routeid : {route['routeid']} or route {filename}")
     else:
-        with open(f'{directory_path}/{filename}', 'w') as file:
+        with open(f'{directory_path}/{filename}', 'w', encoding='utf-8') as file:
             file.write(response.text)
 
     logging.debug(f"Fetched route line : {filename}")
@@ -116,7 +117,7 @@ def get_route_lines(routes):
     os.makedirs(directory_path, exist_ok=True)
     dir_list = set(os.listdir(directory_path))
 
-    pending_routes = [route for route in routes['data'] if route['routeno'] + '.json' not in dir_list]
+    pending_routes = [route for route in routes['data'] if route['routeno'].replace('\t', '') + '.json' not in dir_list]
 
     with ThreadPoolExecutor(max_workers=20) as executor:
         futures = [executor.submit(fetch_route_line, route) for route in pending_routes]
@@ -129,7 +130,8 @@ def get_route_lines(routes):
 # Function to fetch a single timetable
 def fetch_timetable(route, dow, date):
     directory_path = f'bmtc-data/raw/timetables/{dow}'
-    filename = f"{route['routeno']}.json"
+    routeno = route['routeno'].replace('\t', '')
+    filename = f"{routeno}.json"
 
     logging.debug(f"Fetching timetable for route {filename} on {dow}")
 
@@ -143,11 +145,11 @@ def fetch_timetable(route, dow, date):
 
     if response.json().get('Message') == "No Records Found" or not response.json().get('Issuccess'):
         logging.error(f"No timetable records found In API call for routeid {route['routeid']} "
-                      f"/ route : {route['routeno']} between {route['fromstationid']} and {route['tostationid']}"
+                      f"/ route : {routeno} between {route['fromstationid']} and {route['tostationid']}"
                       f" for date : {date.strftime('%Y-%m-%d')}")
         return
     else:
-        with open(f'{directory_path}/{filename}', 'w') as file:
+        with open(f'{directory_path}/{filename}', 'w', encoding='utf-8') as file:
             file.write(response.text)
 
     logging.debug(f"Fetched timetable for route {filename} on {dow}")
@@ -162,7 +164,7 @@ def fetch_timetables_for_day(day, routes):
     directory_path = f'bmtc-data/raw/timetables/{dow}'
     os.makedirs(directory_path, exist_ok=True)
     dir_list = set(os.listdir(directory_path))
-    pending_routes = [route for route in routes['data'] if route['routeno'] + '.json' not in dir_list]
+    pending_routes = [route for route in routes['data'] if route['routeno'].replace('\t', '') + '.json' not in dir_list]
 
     with ThreadPoolExecutor(max_workers=20) as executor:
         futures = [executor.submit(fetch_timetable, route, dow, date) for route in pending_routes]
@@ -195,7 +197,7 @@ def fetch_stop_list(route, route_parent):
         response = session.post(f'{BASE_URL}SearchByRouteDetails_v4', headers=HEADERS, data=data)
         response_data = response.json()
     except BaseException:
-        logging.error(f"Error fetching Stops for route {route}")
+        logging.error(f"Error fetching Stops for route {route_parent} / {route}")
         logging.error(traceback.format_exc())
         return
 
@@ -204,10 +206,10 @@ def fetch_stop_list(route, route_parent):
         return
     else:
         if response_data.get("up", {}).get("data"):
-            with open(f'{directory_path}/{route} UP.json', 'w') as f:
+            with open(f'{directory_path}/{route} UP.json', 'w', encoding='utf-8') as f:
                 f.write(response.text)
         if response_data.get("down", {}).get("data"):
-            with open(f'{directory_path}/{route} DOWN.json', 'w') as f:
+            with open(f'{directory_path}/{route} DOWN.json', 'w', encoding='utf-8') as f:
                 f.write(response.text)
 
     logging.debug(f"Fetched {filename} with route ID {route_parent} / {route}")
@@ -224,8 +226,8 @@ def get_stop_lists(routes, route_parents):
 
     pending_routes = set()
     for route in routes['data']:
-        if route['routeno'].replace(" UP", "").replace(" DOWN", "") not in route_list:
-            pending_routes.add(route['routeno'].replace(" UP", "").replace(" DOWN", ""))
+        if route['routeno'].replace('\t', '').replace(" UP", "").replace(" DOWN", "") not in route_list:
+            pending_routes.add(route['routeno'].replace('\t', '').replace(" UP", "").replace(" DOWN", ""))
 
     with ThreadPoolExecutor(max_workers=20) as executor:
         futures = [executor.submit(fetch_stop_list, route,
