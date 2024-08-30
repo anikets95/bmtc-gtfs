@@ -54,8 +54,8 @@ services:
     volumes:
       - ./bmtc-data/html:/html
     command: html-minifier --input-dir /html --output-dir /html --remove-comments --collapse-whitespace --minify-css --minify-js
-#    depends_on:
-#      gtfs-to-html:
-#          condition: service_completed_successfully
+    depends_on:
+      gtfs-to-html:
+          condition: service_completed_successfully
 
 
