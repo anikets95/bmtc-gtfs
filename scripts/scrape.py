@@ -139,9 +139,11 @@ def fetch_timetable(route, dow, date):
         "routeid": route['routeid'],
         "fromStationId": route['fromstationid'],
         "toStationId": route['tostationid'],
-        "current_date": date.strftime("%Y-%m-%d")
+        "current_date": date.strftime("%Y-%m-%d")+"T00:00:00.000Z",
+        "endtime": date.strftime("%Y-%m-%d")+" 23:59",
+        "starttime": date.strftime("%Y-%m-%d")+" 00:00",
     })
-    response = session.post(f'{BASE_URL}GetTimetableByRouteid_v2', headers=HEADERS, data=data)
+    response = session.post(f'{BASE_URL}GetTimetableByRouteid_v3', headers=HEADERS, data=data)
 
     if response.json().get('Message') == "No Records Found" or not response.json().get('Issuccess'):
         logging.error(f"No timetable records found In API call for routeid {route['routeid']} "

@@ -5,3 +5,4 @@ requests==2.32.3
 transitfeed-py3==1.2.16
 geopandas==1.0.1
 python-on-whales==0.72.0
+python-dotenv==1.0.1
