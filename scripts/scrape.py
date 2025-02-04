@@ -139,9 +139,9 @@ def fetch_timetable(route, dow, date):
         "routeid": route['routeid'],
         "fromStationId": route['fromstationid'],
         "toStationId": route['tostationid'],
-        "current_date": date.strftime("%Y-%m-%d")+"T00:00:00.000Z",
-        "endtime": date.strftime("%Y-%m-%d")+" 23:59",
-        "starttime": date.strftime("%Y-%m-%d")+" 00:00",
+        "current_date": date.strftime("%Y-%m-%d") + "T00:00:00.000Z",
+        "endtime": date.strftime("%Y-%m-%d") + " 23:59",
+        "starttime": date.strftime("%Y-%m-%d") + " 00:00",
     })
     response = session.post(f'{BASE_URL}GetTimetableByRouteid_v3', headers=HEADERS, data=data)
 
@@ -161,20 +161,23 @@ def fetch_timetables_for_day(day, routes):
     date = datetime.now() + timedelta(days=day)
     dow = date.strftime("%A")
 
-    logging.info(f"Fetching timetables for day of {dow}")
+    # Fetch only Monday
+    if dow == "Monday":
+        logging.info(f"Fetching timetables for day of {dow}")
 
-    directory_path = f'bmtc-data/raw/timetables/{dow}'
-    os.makedirs(directory_path, exist_ok=True)
-    dir_list = set(os.listdir(directory_path))
-    pending_routes = [route for route in routes['data'] if route['routeno'].replace('\t', '') + '.json' not in dir_list]
+        directory_path = f'bmtc-data/raw/timetables/{dow}'
+        os.makedirs(directory_path, exist_ok=True)
+        dir_list = set(os.listdir(directory_path))
+        pending_routes = [route for route in routes['data'] if
+                          route['routeno'].replace('\t', '') + '.json' not in dir_list]
 
-    with ThreadPoolExecutor(max_workers=20) as executor:
-        futures = [executor.submit(fetch_timetable, route, dow, date) for route in pending_routes]
-        for future in as_completed(futures):
-            try:
-                future.result()
-            except Exception as e:
-                logging.error(f"Error fetching timetable for route: {e}")
+        with ThreadPoolExecutor(max_workers=20) as executor:
+            futures = [executor.submit(fetch_timetable, route, dow, date) for route in pending_routes]
+            for future in as_completed(futures):
+                try:
+                    future.result()
+                except Exception as e:
+                    logging.error(f"Error fetching timetable for route: {e}")
 
 
 # Function to fetch timetables and save them
@@ -238,6 +241,7 @@ def get_stop_lists(routes, route_parents):
             future.result()
 
     logging.info("Finished fetching stop lists...")
+
 
 # Main workflow
 def main():
